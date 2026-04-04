@@ -1,19 +1,22 @@
 import { useState } from 'react'
+import { gitCodex } from '../../content/codex.git.js'
 
 const TABS = ['ELI5', 'Savvy', 'Man page']
 const TAB_KEYS = ['eli5', 'savvy', 'manpage']
 
-// Placeholder data — replaced by real codex imports in Phase 4
-const SAMPLE = {
-  command: 'git add .',
-  eli5: 'Think of git add like putting things into a shopping cart before you check out. You\'re not buying yet — you\'re just saying "yes, I want these changes in my next save." The dot means grab everything.',
-  savvy: 'Moves all changes from the working directory into the index (staging area). The `.` recursively stages all modified and untracked files in the current directory.',
-  manpage: '`git add [pathspec]` — update the index. `.` adds all. `-p` interactive patch mode. `-u` update tracked files only. `-A` stage all including deletions. `--dry-run` shows what would be staged.',
+const CODEX_SOURCES = {
+  git: gitCodex,
+  // sql: sqlCodex  — added in Phase 8
 }
 
-export default function Codex({ codexKey, quest = 'git', defaultOpen = false, entry = SAMPLE, xp = 40 }) {
+export default function Codex({ codexKey, quest = 'git', defaultOpen = false, xp = 40 }) {
   const [open, setOpen] = useState(defaultOpen)
   const [tab, setTab] = useState(0)
+
+  const source = CODEX_SOURCES[quest] ?? {}
+  const entry = source[codexKey]
+
+  if (!entry) return null
 
   return (
     <div className="my-2 border border-zinc-800 rounded bg-zinc-900/60 text-sm overflow-hidden">
