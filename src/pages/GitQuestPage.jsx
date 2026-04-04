@@ -24,6 +24,7 @@ export default function GitQuestPage() {
   const addToHistory = useGameStore(s => s.addToHistory)
   const submitGitCommand = useGameStore(s => s.submitGitCommand)
   const resolveGitConflict = useGameStore(s => s.resolveGitConflict)
+  const jumpToLevel = useGameStore(s => s.jumpToLevel)
 
   const currentMission = gitMissions[git.currentMission]
   const activeLevel = currentMission?.level ?? git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1
@@ -66,6 +67,7 @@ export default function GitQuestPage() {
       totalLevels={10}
       unlockedLevels={git.unlockedLevels}
       activeLevel={activeLevel}
+      onSelectLevel={num => jumpToLevel('git', num, gitMissions)}
     >
       <GamePanel
         levelName={levelName}

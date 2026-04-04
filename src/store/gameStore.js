@@ -297,6 +297,16 @@ export const useGameStore = create((set, get) => ({
     persistSave(get())
   },
 
+  jumpToLevel(quest, levelNum, missions) {
+    // Find the index of the first mission belonging to levelNum
+    const idx = missions.findIndex(m => m.level === levelNum)
+    if (idx === -1) return
+    set(state => ({
+      [quest]: { ...state[quest], currentMission: idx },
+    }))
+    persistSave(get())
+  },
+
   openCodex(quest, key) {
     set(state => {
       const q = state[quest]

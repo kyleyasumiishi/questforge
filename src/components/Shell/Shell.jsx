@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1800]
 const LEVEL_TITLES = ['Newcomer', 'Apprentice', 'Journeyman', 'Adept', 'Veteran', 'Master', 'Lorekeeper']
 
@@ -29,6 +31,16 @@ export default function Shell({
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 overflow-hidden">
       {/* Top bar */}
       <div className="flex items-center gap-4 px-4 h-11 border-b border-zinc-800 shrink-0">
+        {/* Home button */}
+        <Link
+          to="/"
+          className="text-zinc-600 hover:text-zinc-300 text-xs transition-colors shrink-0"
+          title="Back to quest select"
+        >
+          ← home
+        </Link>
+
+        <span className="text-zinc-700 text-xs">|</span>
         <span className="text-zinc-400 text-xs uppercase tracking-widest">{questTitle}</span>
         <span className="text-zinc-600 text-xs">·</span>
         <span className="text-zinc-300 text-xs">{currentLevelName}</span>
@@ -71,10 +83,15 @@ export default function Shell({
               key={num}
               onClick={() => unlocked && onSelectLevel?.(num)}
               disabled={!unlocked}
+              title={
+                done ? `Jump to Level ${num}` :
+                active ? `Level ${num} — current` :
+                `Level ${num} — locked`
+              }
               className={[
                 'shrink-0 w-7 h-7 rounded text-xs font-mono font-bold transition-colors',
                 done ? 'bg-emerald-900 text-emerald-400 hover:bg-emerald-800 cursor-pointer' : '',
-                active ? 'bg-emerald-600 text-white' : '',
+                active ? 'bg-emerald-600 text-white cursor-default' : '',
                 !unlocked ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' : '',
               ].join(' ')}
             >
@@ -93,6 +110,8 @@ export default function Shell({
         <StatusItem label="Missions" value={missionsCompleted} />
         <Divider />
         <StatusItem label="Learned" value={commandsLearned} />
+        <div className="flex-1" />
+        <span className="text-zinc-700 text-xs">auto-saved ✓</span>
       </div>
     </div>
   )
