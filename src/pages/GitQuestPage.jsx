@@ -23,6 +23,7 @@ export default function GitQuestPage() {
   const setActiveQuest = useGameStore(s => s.setActiveQuest)
   const addToHistory = useGameStore(s => s.addToHistory)
   const submitGitCommand = useGameStore(s => s.submitGitCommand)
+  const resolveGitConflict = useGameStore(s => s.resolveGitConflict)
 
   const currentMission = gitMissions[git.currentMission]
   const activeLevel = currentMission?.level ?? git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1
@@ -74,6 +75,7 @@ export default function GitQuestPage() {
       <TerminalPanel
         history={git.terminalHistory}
         onSubmit={submitGitCommand}
+        onResolveConflict={resolveGitConflict}
         prompt={`~/quest-repo (${git.gitState?.HEAD ?? 'main'}) $`}
         quest="git"
       />

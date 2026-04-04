@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Codex from '../Codex/Codex'
+import ConflictEditor from '../ConflictEditor/ConflictEditor'
 
 const TYPE_STYLES = {
   command: 'text-zinc-100',
@@ -13,6 +14,7 @@ const TYPE_STYLES = {
 export default function TerminalPanel({
   history = [],
   onSubmit,
+  onResolveConflict,
   prompt = '~/quest-repo (main) $',
   disabled = false,
   quest = 'git',
@@ -71,6 +73,14 @@ export default function TerminalPanel({
                 codexKey={entry.codexKey}
                 quest={quest}
                 defaultOpen={i === history.length - 1}
+              />
+            )
+          }
+          if (entry.type === 'conflict-editor') {
+            return (
+              <ConflictEditor
+                key={i}
+                onResolve={onResolveConflict}
               />
             )
           }
