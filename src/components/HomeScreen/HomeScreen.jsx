@@ -12,7 +12,7 @@ export default function HomeScreen() {
         <QuestCard
           title="GitQuest"
           subtitle="The Repo Chronicles"
-          description="52 beats · 10 zones · Core Git"
+          description="52 missions · 10 levels · Core Git"
           href="/gitquest"
           accent="text-emerald-400"
           border="border-emerald-800 hover:border-emerald-500"
@@ -20,7 +20,7 @@ export default function HomeScreen() {
         <QuestCard
           title="SQLQuest"
           subtitle="The Buried City"
-          description="53 beats · 10 zones · Core SQL"
+          description="53 missions · 10 levels · Core SQL"
           href="/sqlquest"
           accent="text-amber-400"
           border="border-amber-800 hover:border-amber-500"
