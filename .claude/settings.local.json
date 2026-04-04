@@ -10,7 +10,12 @@
       "Bash(cp -r /Users/kyleyasumiishi/Documents/questforge-scaffold/. /Users/kyleyasumiishi/Documents/questforge/)",
       "Bash(rm -rf /Users/kyleyasumiishi/Documents/questforge-scaffold)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/gitquest)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/sqlquest)"
     ]
   }
 }
