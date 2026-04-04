@@ -106,6 +106,9 @@ export const useGameStore = create((set, get) => ({
         newEntries.push({ type: 'output', text: '' })
         newEntries.push({ type: 'output', text: nextMission.narrative })
         newEntries.push({ type: 'info', text: `${nextMission.npcName}: "${nextMission.npcLine}"` })
+        if (nextMission.specialType !== 'conflict') {
+          newEntries.push({ type: 'path', text: `  ▶  ${nextMission.command}` })
+        }
       }
 
       const completedMissions = q.completedMissions.includes(missionId)
@@ -178,6 +181,7 @@ export const useGameStore = create((set, get) => ({
   },
 
   resetQuest(quest) {
+    if (quest === 'git') localStorage.removeItem('questforge-git-seeded')
     set({
       [quest]: {
         ...defaultQuestState,

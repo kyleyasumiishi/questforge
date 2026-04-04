@@ -30,7 +30,13 @@ export default function GitQuestPage() {
 
   useEffect(() => {
     setActiveQuest('git')
-    if (git.terminalHistory.length === 0) {
+  }, [])
+
+  // Seed intro only once — stored in localStorage so StrictMode double-fire is safe
+  useEffect(() => {
+    const alreadySeeded = localStorage.getItem('questforge-git-seeded')
+    if (git.terminalHistory.length === 0 && !alreadySeeded) {
+      localStorage.setItem('questforge-git-seeded', '1')
       const first = gitMissions[0]
       addToHistory('git', [
         { type: 'info', text: '════════════════════════════════════════' },
@@ -42,6 +48,7 @@ export default function GitQuestPage() {
         { type: 'output', text: '' },
         { type: 'output', text: first.narrative },
         { type: 'info', text: `${first.npcName}: "${first.npcLine}"` },
+        { type: 'path', text: `  ▶  ${first.command}` },
       ])
     }
   }, [])
