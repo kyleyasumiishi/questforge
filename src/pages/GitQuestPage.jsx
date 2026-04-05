@@ -87,6 +87,7 @@ export default function GitQuestPage() {
         npcName={currentMission?.npcName ?? 'The Elder'}
         npcLine={currentMission?.npcLine ?? ''}
         quest="git"
+        unlockedKeys={git.openCodexKeys}
       />
       <TerminalPanel
         history={git.terminalHistory}

@@ -1,14 +1,17 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createRenderer } from '../../canvas/renderer'
+import CodexPanel from '../CodexPanel/CodexPanel'
 
 export default function GamePanel({
   levelNum = 1,
   npcName = 'The Elder',
   npcLine = '',
   quest = 'git',
+  unlockedKeys = [],
 }) {
   const canvasRef = useRef(null)
   const rendererRef = useRef(null)
+  const [view, setView] = useState('canvas') // 'canvas' | 'codex'
 
   // Initialize renderer once
   useEffect(() => {
@@ -22,7 +25,6 @@ export default function GamePanel({
     const handleResize = () => renderer.resize()
     window.addEventListener('resize', handleResize)
 
-    // Also observe parent resize (for draggable divider)
     const ro = new ResizeObserver(handleResize)
     ro.observe(canvas.parentElement)
 
@@ -40,13 +42,44 @@ export default function GamePanel({
 
   return (
     <div className="flex flex-col w-full h-full bg-zinc-900 overflow-hidden">
-      <div className="flex-1 relative">
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ imageRendering: 'pixelated' }}
-        />
+      {/* Tab bar */}
+      <div className="flex items-center border-b border-zinc-800 shrink-0">
+        <button
+          onClick={() => setView('canvas')}
+          className={[
+            'px-4 py-1.5 text-xs transition-colors',
+            view === 'canvas'
+              ? 'text-zinc-200 border-b-2 border-emerald-500 -mb-px'
+              : 'text-zinc-600 hover:text-zinc-400',
+          ].join(' ')}
+        >
+          World
+        </button>
+        <button
+          onClick={() => setView('codex')}
+          className={[
+            'px-4 py-1.5 text-xs transition-colors',
+            view === 'codex'
+              ? 'text-amber-400 border-b-2 border-amber-400 -mb-px'
+              : 'text-zinc-600 hover:text-zinc-400',
+          ].join(' ')}
+        >
+          Codex ✦
+        </button>
       </div>
+
+      {/* Content */}
+      {view === 'canvas' ? (
+        <div className="flex-1 relative">
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full"
+            style={{ imageRendering: 'pixelated' }}
+          />
+        </div>
+      ) : (
+        <CodexPanel quest={quest} unlockedKeys={unlockedKeys} />
+      )}
     </div>
   )
 }

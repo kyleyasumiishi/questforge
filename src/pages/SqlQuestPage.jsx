@@ -85,6 +85,7 @@ export default function SqlQuestPage() {
         npcName={currentMission?.npcName ?? 'The Veteran Excavator'}
         npcLine={currentMission?.npcLine ?? ''}
         quest="sql"
+        unlockedKeys={sql.openCodexKeys}
       />
       <TerminalPanel
         history={sql.terminalHistory}
