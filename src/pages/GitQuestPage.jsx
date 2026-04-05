@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import Shell from '../components/Shell/Shell'
 import GamePanel from '../components/GamePanel/GamePanel'
 import TerminalPanel from '../components/TerminalPanel/TerminalPanel'
+import QuestComplete from '../components/QuestComplete/QuestComplete'
 import { useGameStore } from '../store/gameStore'
 import { gitMissions } from '../content/missions.git.js'
 
@@ -25,10 +26,21 @@ export default function GitQuestPage() {
   const submitGitCommand = useGameStore(s => s.submitGitCommand)
   const resolveGitConflict = useGameStore(s => s.resolveGitConflict)
   const jumpToLevel = useGameStore(s => s.jumpToLevel)
+  const resetQuest = useGameStore(s => s.resetQuest)
+
+  const questComplete = git.currentMission >= gitMissions.length
 
   const currentMission = gitMissions[git.currentMission]
   const activeLevel = currentMission?.level ?? git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1
   const levelName = LEVEL_NAMES[activeLevel] ?? 'The Sanctum Spire'
+
+  // Find most recently completed level for badge flash
+  const recentlyCompletedLevel = (() => {
+    for (let i = git.terminalHistory.length - 1; i >= Math.max(0, git.terminalHistory.length - 15); i--) {
+      if (git.terminalHistory[i]?.type === 'level-complete') return git.terminalHistory[i].level
+    }
+    return null
+  })()
 
   useEffect(() => {
     setActiveQuest('git')
@@ -67,12 +79,14 @@ export default function GitQuestPage() {
       totalLevels={10}
       unlockedLevels={git.unlockedLevels}
       activeLevel={activeLevel}
+      recentlyCompletedLevel={recentlyCompletedLevel}
       onSelectLevel={num => jumpToLevel('git', num, gitMissions)}
     >
       <GamePanel
-        levelName={levelName}
+        levelNum={activeLevel}
         npcName={currentMission?.npcName ?? 'The Elder'}
         npcLine={currentMission?.npcLine ?? ''}
+        quest="git"
       />
       <TerminalPanel
         history={git.terminalHistory}
@@ -80,7 +94,17 @@ export default function GitQuestPage() {
         onResolveConflict={resolveGitConflict}
         prompt={`~/quest-repo (${git.gitState?.HEAD ?? 'main'}) $`}
         quest="git"
+        disabled={questComplete}
       />
+      {questComplete && (
+        <QuestComplete
+          questTitle="GitQuest: The Repo Chronicles"
+          xp={git.xp}
+          level={git.level}
+          commandsLearned={git.openCodexKeys}
+          onPlayAgain={() => resetQuest('git')}
+        />
+      )}
     </Shell>
   )
 }

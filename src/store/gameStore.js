@@ -44,6 +44,20 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
       text: `⬆ Level up! You are now Lv ${newLevel} — ${LEVEL_TITLES[newLevel - 1] ?? 'Lorekeeper'}`,
     })
   }
+
+  // Level completion — next mission is in a different level (or quest is done)
+  if (mission && (!nextMission || nextMission.level !== mission.level)) {
+    entries.push({ type: 'output', text: '' })
+    entries.push({
+      type: 'level-complete',
+      text: `═══ Level ${mission.level} Complete! ═══`,
+      level: mission.level,
+    })
+    if (mission.npcName) {
+      entries.push({ type: 'success', text: `${mission.npcName}: "Well done, adventurer. A new path opens before you."` })
+    }
+  }
+
   if (nextMission) {
     entries.push({ type: 'output', text: '' })
     entries.push({ type: 'output', text: nextMission.narrative })
@@ -113,6 +127,14 @@ export const useGameStore = create((set, get) => ({
   submitGitCommand(input) {
     const state = get()
     const q = state.git
+
+    // Handle /hint command
+    if (input.trim().toLowerCase() === '/hint') {
+      state.addToHistory('git', [{ type: 'command', text: input }])
+      state.showHint('git')
+      return
+    }
+
     const mission = gitMissions[q.currentMission]
     const missionId = mission?.id ?? `git-mission-${q.currentMission}`
     const newEntries = [{ type: 'command', text: input }]
@@ -251,8 +273,10 @@ export const useGameStore = create((set, get) => ({
         newEntries.push({ type: result.isInfo ? 'output' : 'error', text: line })
       )
 
-      if (failCount >= 2 && mission?.hint && !result.isInfo) {
-        newEntries.push({ type: 'info', text: `  ✦ hint: ${mission.hint}` })
+      if (failCount >= 4 && mission?.hint && !result.isInfo) {
+        newEntries.push({ type: 'hint', text: `  ✦ hint: ${mission.hint}` })
+      } else if (failCount >= 2 && mission?.hint && !result.isInfo) {
+        newEntries.push({ type: 'info', text: '  ✦ Type /hint if you need a nudge' })
       }
 
       set({
@@ -314,6 +338,14 @@ export const useGameStore = create((set, get) => ({
   submitSqlCommand(input) {
     const state = get()
     const q = state.sql
+
+    // Handle /hint command
+    if (input.trim().toLowerCase() === '/hint') {
+      state.addToHistory('sql', [{ type: 'command', text: input }])
+      state.showHint('sql')
+      return
+    }
+
     const mission = sqlMissions[q.currentMission]
     const missionId = mission?.id ?? `sql-mission-${q.currentMission}`
     const newEntries = [{ type: 'command', text: input }]
@@ -387,8 +419,10 @@ export const useGameStore = create((set, get) => ({
     } else {
       const failCount = (q.failedAttempts[missionId] ?? 0) + 1
       result.output.forEach(line => newEntries.push({ type: 'error', text: line }))
-      if (failCount >= 2 && mission?.hint) {
-        newEntries.push({ type: 'info', text: `  ✦ hint: ${mission.hint}` })
+      if (failCount >= 4 && mission?.hint) {
+        newEntries.push({ type: 'hint', text: `  ✦ hint: ${mission.hint}` })
+      } else if (failCount >= 2 && mission?.hint) {
+        newEntries.push({ type: 'info', text: '  ✦ Type /hint if you need a nudge' })
       }
       set({
         sql: {
@@ -419,6 +453,22 @@ export const useGameStore = create((set, get) => ({
         ? q.openCodexKeys
         : [...q.openCodexKeys, key]
       return { [quest]: { ...q, openCodexKeys } }
+    })
+    persistSave(get())
+  },
+
+  showHint(quest) {
+    const state = get()
+    const q = state[quest]
+    const missions = quest === 'git' ? gitMissions : sqlMissions
+    const mission = missions[q.currentMission]
+    if (!mission?.hint) return
+    const entries = [{ type: 'hint', text: `  ✦ hint: ${mission.hint}` }]
+    set({
+      [quest]: {
+        ...q,
+        terminalHistory: [...q.terminalHistory, ...entries].slice(-100),
+      },
     })
     persistSave(get())
   },

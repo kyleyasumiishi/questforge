@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import Shell from '../components/Shell/Shell'
 import GamePanel from '../components/GamePanel/GamePanel'
 import TerminalPanel from '../components/TerminalPanel/TerminalPanel'
+import QuestComplete from '../components/QuestComplete/QuestComplete'
 import { useGameStore } from '../store/gameStore'
 import { sqlMissions } from '../content/missions.sql.js'
 
@@ -24,10 +25,20 @@ export default function SqlQuestPage() {
   const addToHistory = useGameStore(s => s.addToHistory)
   const submitSqlCommand = useGameStore(s => s.submitSqlCommand)
   const jumpToLevel = useGameStore(s => s.jumpToLevel)
+  const resetQuest = useGameStore(s => s.resetQuest)
+
+  const questComplete = sql.currentMission >= sqlMissions.length
 
   const currentMission = sqlMissions[sql.currentMission]
   const activeLevel = currentMission?.level ?? sql.unlockedLevels[sql.unlockedLevels.length - 1] ?? 1
   const levelName = LEVEL_NAMES[activeLevel] ?? 'The Grand Archive'
+
+  const recentlyCompletedLevel = (() => {
+    for (let i = sql.terminalHistory.length - 1; i >= Math.max(0, sql.terminalHistory.length - 15); i--) {
+      if (sql.terminalHistory[i]?.type === 'level-complete') return sql.terminalHistory[i].level
+    }
+    return null
+  })()
 
   useEffect(() => {
     setActiveQuest('sql')
@@ -66,19 +77,31 @@ export default function SqlQuestPage() {
       totalLevels={10}
       unlockedLevels={sql.unlockedLevels}
       activeLevel={activeLevel}
+      recentlyCompletedLevel={recentlyCompletedLevel}
       onSelectLevel={num => jumpToLevel('sql', num, sqlMissions)}
     >
       <GamePanel
-        levelName={levelName}
+        levelNum={activeLevel}
         npcName={currentMission?.npcName ?? 'The Veteran Excavator'}
         npcLine={currentMission?.npcLine ?? ''}
+        quest="sql"
       />
       <TerminalPanel
         history={sql.terminalHistory}
         onSubmit={submitSqlCommand}
         prompt="queryra>"
         quest="sql"
+        disabled={questComplete}
       />
+      {questComplete && (
+        <QuestComplete
+          questTitle="SQLQuest: The Buried City"
+          xp={sql.xp}
+          level={sql.level}
+          commandsLearned={sql.openCodexKeys}
+          onPlayAgain={() => resetQuest('sql')}
+        />
+      )}
     </Shell>
   )
 }

@@ -26,3 +26,12 @@
   background: #3f3f46;
   border-radius: 2px;
 }
+
+/* Level badge flash animation */
+@keyframes badge-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+  50% { box-shadow: 0 0 12px 4px rgba(52, 211, 153, 0.6); }
+}
+.badge-flash {
+  animation: badge-flash 0.6s ease-in-out 3;
+}

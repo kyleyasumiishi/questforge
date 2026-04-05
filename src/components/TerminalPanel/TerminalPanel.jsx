@@ -9,6 +9,7 @@ const TYPE_STYLES = {
   error:   'text-red-400',
   info:    'text-amber-400',
   path:    'text-purple-400',
+  hint:    'text-cyan-400',
 }
 
 export default function TerminalPanel({
@@ -82,6 +83,13 @@ export default function TerminalPanel({
                 key={i}
                 onResolve={onResolveConflict}
               />
+            )
+          }
+          if (entry.type === 'level-complete') {
+            return (
+              <div key={i} className="text-emerald-300 font-bold text-center py-2 animate-pulse">
+                {entry.text}
+              </div>
             )
           }
           return (

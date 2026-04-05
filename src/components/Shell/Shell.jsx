@@ -21,6 +21,7 @@ export default function Shell({
   totalLevels = 10,
   unlockedLevels = [1],
   activeLevel = 1,
+  recentlyCompletedLevel = null,
   onSelectLevel,
   children,
 }) {
@@ -93,6 +94,7 @@ export default function Shell({
                 done ? 'bg-emerald-900 text-emerald-400 hover:bg-emerald-800 cursor-pointer' : '',
                 active ? 'bg-emerald-600 text-white cursor-default' : '',
                 !unlocked ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' : '',
+                num === recentlyCompletedLevel ? 'badge-flash' : '',
               ].join(' ')}
             >
               {done ? '✓' : num}
