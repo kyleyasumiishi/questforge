@@ -68,16 +68,15 @@ export default function GamePanel({
         </button>
       </div>
 
-      {/* Content */}
-      {view === 'canvas' ? (
-        <div className="flex-1 relative">
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ imageRendering: 'pixelated' }}
-          />
-        </div>
-      ) : (
+      {/* Content — canvas stays mounted to preserve renderer */}
+      <div className={`flex-1 relative ${view === 'canvas' ? '' : 'hidden'}`}>
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      </div>
+      {view === 'codex' && (
         <CodexPanel quest={quest} unlockedKeys={unlockedKeys} />
       )}
     </div>
