@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { loadSave, persistSave } from './persistence'
+import { loadSave, persistSave, downloadExport, validateImport } from './persistence'
 import { evaluateGitCommand, resolveConflict } from '../engines/gitEngine'
 import { evaluateSqlCommand, createDataset } from '../engines/sqlEngine'
 import { defaultGitState } from './gitStore'
@@ -490,6 +490,40 @@ export const useGameStore = create((set, get) => ({
       },
     })
     persistSave(get())
+  },
+
+  exportSave() {
+    downloadExport(get())
+  },
+
+  importSave(raw) {
+    const result = validateImport(raw)
+    if (!result.ok) return result
+
+    const data = result.data
+    set({
+      activeQuest: data.activeQuest ?? null,
+      git: {
+        ...defaultQuestState,
+        ...data.git,
+        gitState: { ...defaultGitState, ...(data.git?.gitState ?? {}) },
+        failedAttempts: data.git?.failedAttempts ?? {},
+        completedVisions: data.git?.completedVisions ?? [],
+      },
+      sql: {
+        ...defaultSqlQuestState,
+        ...data.sql,
+        dataset: data.sql?.dataset ?? createDataset(),
+        failedAttempts: data.sql?.failedAttempts ?? {},
+      },
+    })
+    persistSave(get())
+
+    // Re-seed flags so intro doesn't replay
+    if (data.git?.terminalHistory?.length > 0) localStorage.setItem('questforge-git-seeded', '1')
+    if (data.sql?.terminalHistory?.length > 0) localStorage.setItem('questforge-sql-seeded', '1')
+
+    return { ok: true }
   },
 
   resetQuest(quest) {

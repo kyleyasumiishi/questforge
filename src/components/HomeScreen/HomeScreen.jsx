@@ -1,11 +1,15 @@
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGameStore } from '../../store/gameStore'
-import { clearSave } from '../../store/persistence'
 
 export default function HomeScreen() {
   const git = useGameStore(s => s.git)
   const sql = useGameStore(s => s.sql)
   const resetQuest = useGameStore(s => s.resetQuest)
+  const exportSave = useGameStore(s => s.exportSave)
+  const importSave = useGameStore(s => s.importSave)
+  const fileRef = useRef(null)
+  const [importMsg, setImportMsg] = useState(null)
 
   const gitProgress = git.completedMissions.length > 0 ? {
     level: git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1,
@@ -17,8 +21,25 @@ export default function HomeScreen() {
     mission: sql.completedMissions.length,
   } : null
 
-  function handleReset(quest) {
-    resetQuest(quest)
+  function handleImport(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Reset input so the same file can be re-selected
+    e.target.value = ''
+
+    if (!confirm('This will replace your current save. Continue?')) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = importSave(reader.result)
+      if (result.ok) {
+        setImportMsg({ type: 'success', text: 'Save imported successfully!' })
+      } else {
+        setImportMsg({ type: 'error', text: result.error })
+      }
+      setTimeout(() => setImportMsg(null), 4000)
+    }
+    reader.readAsText(file)
   }
 
   return (
@@ -37,7 +58,7 @@ export default function HomeScreen() {
           accent="text-emerald-400"
           border="border-emerald-800 hover:border-emerald-500"
           progress={gitProgress}
-          onReset={() => handleReset('git')}
+          onReset={() => resetQuest('git')}
         />
         <QuestCard
           title="SQLQuest"
@@ -47,9 +68,40 @@ export default function HomeScreen() {
           accent="text-amber-400"
           border="border-amber-800 hover:border-amber-500"
           progress={sqlProgress}
-          onReset={() => handleReset('sql')}
+          onReset={() => resetQuest('sql')}
         />
       </div>
+
+      {/* Export / Import */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={exportSave}
+          className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+        >
+          Export save
+        </button>
+        <span className="text-zinc-800 text-xs">·</span>
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+        >
+          Import save
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json"
+          onChange={handleImport}
+          className="hidden"
+        />
+      </div>
+
+      {/* Import feedback */}
+      {importMsg && (
+        <div className={`text-xs ${importMsg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {importMsg.text}
+        </div>
+      )}
     </div>
   )
 }
