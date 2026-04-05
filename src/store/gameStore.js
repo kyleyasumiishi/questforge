@@ -148,8 +148,20 @@ export const useGameStore = create((set, get) => ({
       return true
     }
     if (cmd === '/clear') {
-      set({ [quest]: { ...state[quest], terminalHistory: [] } })
-      persistSave(get())
+      const missions = quest === 'git' ? gitMissions : sqlMissions
+      const mission = missions[state[quest].currentMission]
+      const entries = []
+      if (mission) {
+        entries.push({ type: 'output', text: mission.narrative })
+        entries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"` })
+        if (mission.specialType === 'conflict') {
+          entries.push({ type: 'conflict-editor' })
+        } else {
+          entries.push({ type: 'path', text: `  ▶  ${mission.command}` })
+        }
+      }
+      // Only clear visual — don't persist so full history survives in localStorage
+      set({ [quest]: { ...state[quest], terminalHistory: entries } })
       return true
     }
     if (cmd === '/help') {
