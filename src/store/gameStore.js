@@ -118,7 +118,7 @@ export const useGameStore = create((set, get) => ({
 
   addToHistory(quest, entries) {
     set(state => {
-      const history = [...state[quest].terminalHistory, ...entries].slice(-100)
+      const history = [...state[quest].terminalHistory, ...entries]
       return { [quest]: { ...state[quest], terminalHistory: history } }
     })
     persistSave(get())

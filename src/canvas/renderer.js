@@ -43,10 +43,11 @@ export function createRenderer(canvas, quest = 'git') {
     ctx.fillStyle = zone.wallAccent
     ctx.fillRect(0, groundY - 2, w, 2)
 
-    // Wall texture (upper area)
+    // Wall texture (upper area) — deterministic hash to avoid shimmer
     for (let x = 0; x < w; x += TILE * 2) {
       for (let y = 0; y < groundY; y += TILE * 2) {
-        if (Math.random() < 0.08) {
+        const hash = ((x * 31 + y * 17 + currentLevel * 7) % 100)
+        if (hash < 8) {
           ctx.fillStyle = zone.wallAccent
           ctx.globalAlpha = 0.15
           ctx.fillRect(x, y, TILE, TILE)
