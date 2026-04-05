@@ -25,13 +25,13 @@ function levelForXp(xp) {
 function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
   const entries = []
 
-  result.output.forEach(line => entries.push({ type: 'success', text: line }))
+  result.output.forEach(line => entries.push({ type: 'success', text: line, typewriter: true }))
 
   if (mission?.narrative) {
-    entries.push({ type: 'info', text: mission.narrative })
+    entries.push({ type: 'info', text: mission.narrative, typewriter: true })
   }
   if (mission?.npcLine) {
-    entries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"` })
+    entries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"`, typewriter: true })
   }
   if (result.codexKey) {
     entries.push({ type: 'codex-block', codexKey: result.codexKey })
@@ -43,6 +43,7 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
     entries.push({
       type: 'success',
       text: `⬆ Level up! You are now Lv ${newLevel} — ${LEVEL_TITLES[newLevel - 1] ?? 'Lorekeeper'}`,
+      typewriter: true,
     })
   }
 
@@ -62,14 +63,14 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
       level: mission.level,
     })
     if (mission.npcName) {
-      entries.push({ type: 'success', text: `${mission.npcName}: "Well done, adventurer. A new path opens before you."` })
+      entries.push({ type: 'success', text: `${mission.npcName}: "Well done, adventurer. A new path opens before you."`, typewriter: true })
     }
   }
 
   if (nextMission) {
     entries.push({ type: 'output', text: '' })
-    entries.push({ type: 'output', text: nextMission.narrative })
-    entries.push({ type: 'info', text: `${nextMission.npcName}: "${nextMission.npcLine}"` })
+    entries.push({ type: 'output', text: nextMission.narrative, typewriter: true })
+    entries.push({ type: 'info', text: `${nextMission.npcName}: "${nextMission.npcLine}"`, typewriter: true })
     if (nextMission.specialType === 'conflict') {
       entries.push({ type: 'conflict-editor' })
     } else {

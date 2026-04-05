@@ -1,6 +1,36 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, memo } from 'react'
 import Codex from '../Codex/Codex'
 import ConflictEditor from '../ConflictEditor/ConflictEditor'
+
+const CHAR_DELAY = 10 // ms per character
+
+const TypewriterText = memo(function TypewriterText({ text, onDone }) {
+  const [len, setLen] = useState(0)
+  const rafRef = useRef(null)
+  const startRef = useRef(null)
+
+  useEffect(() => {
+    if (!text) { onDone?.(); return }
+    startRef.current = performance.now()
+
+    function tick(now) {
+      const elapsed = now - startRef.current
+      const chars = Math.floor(elapsed / CHAR_DELAY)
+      if (chars >= text.length) {
+        setLen(text.length)
+        onDone?.()
+        return
+      }
+      setLen(chars)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [text])
+
+  return <>{text.slice(0, len)}</>
+})
 
 const TYPE_STYLES = {
   command: 'text-zinc-100',
@@ -23,8 +53,21 @@ export default function TerminalPanel({
 }) {
   const [input, setInput] = useState('')
   const [historyIdx, setHistoryIdx] = useState(-1)
+  const [twDone, setTwDone] = useState(new Set()) // indices that finished animating
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
+  const prevLenRef = useRef(history.length) // track previous history length
+  const newStartRef = useRef(history.length) // index where new entries begin
+
+  // When history grows, mark new entries as animatable
+  if (history.length > prevLenRef.current) {
+    newStartRef.current = prevLenRef.current
+    prevLenRef.current = history.length
+  } else if (history.length < prevLenRef.current) {
+    // History shrunk (e.g. /clear) — reset
+    newStartRef.current = 0
+    prevLenRef.current = history.length
+  }
 
   // Collect past commands for up-arrow history
   const pastCommands = history
@@ -93,12 +136,22 @@ export default function TerminalPanel({
               </div>
             )
           }
+          const isNew = i >= newStartRef.current
+          const canAnimate = isNew && entry.typewriter && !twDone.has(i)
+
           return (
             <div key={i} className={TYPE_STYLES[entry.type] ?? 'text-zinc-400'}>
               {entry.type === 'command' && (
                 <span className="text-zinc-600 select-none mr-2">$</span>
               )}
-              {entry.text}
+              {canAnimate ? (
+                <TypewriterText
+                  text={entry.text}
+                  onDone={() => setTwDone(s => new Set(s).add(i))}
+                />
+              ) : (
+                entry.text
+              )}
             </div>
           )
         })}
