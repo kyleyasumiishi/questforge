@@ -27,9 +27,6 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
 
   result.output.forEach(line => entries.push({ type: 'success', text: line, typewriter: true }))
 
-  if (mission?.narrative) {
-    entries.push({ type: 'info', text: mission.narrative, typewriter: true })
-  }
   if (mission?.npcLine) {
     entries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"`, typewriter: true })
   }
