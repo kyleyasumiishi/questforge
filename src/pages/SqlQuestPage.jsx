@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import Shell from '../components/Shell/Shell'
 import GamePanel from '../components/GamePanel/GamePanel'
 import TerminalPanel from '../components/TerminalPanel/TerminalPanel'
 import QuestComplete from '../components/QuestComplete/QuestComplete'
 import { useGameStore } from '../store/gameStore'
 import { sqlMissions } from '../content/missions.sql.js'
+import { playSfx } from '../audio/sfx'
 
 const LEVEL_NAMES = {
   1:  'The Surface Layer',
@@ -28,6 +29,13 @@ export default function SqlQuestPage() {
   const resetQuest = useGameStore(s => s.resetQuest)
 
   const questComplete = sql.currentMission >= sqlMissions.length
+  const playedComplete = useRef(false)
+  useEffect(() => {
+    if (questComplete && !playedComplete.current) {
+      playedComplete.current = true
+      playSfx('quest-complete')
+    }
+  }, [questComplete])
 
   const currentMission = sqlMissions[sql.currentMission]
   const activeLevel = currentMission?.level ?? sql.unlockedLevels[sql.unlockedLevels.length - 1] ?? 1

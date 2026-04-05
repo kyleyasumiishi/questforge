@@ -5,6 +5,7 @@ import { evaluateSqlCommand, createDataset } from '../engines/sqlEngine'
 import { defaultGitState } from './gitStore'
 import { gitMissions } from '../content/missions.git.js'
 import { sqlMissions } from '../content/missions.sql.js'
+import { playSfx } from '../audio/sfx'
 
 const XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1800]
 const LEVEL_TITLES = ['Newcomer', 'Apprentice', 'Journeyman', 'Adept', 'Veteran', 'Master', 'Lorekeeper']
@@ -44,6 +45,12 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
       text: `⬆ Level up! You are now Lv ${newLevel} — ${LEVEL_TITLES[newLevel - 1] ?? 'Lorekeeper'}`,
     })
   }
+
+  // Sound effects for success path
+  if (newLevel > q.level) playSfx('levelup')
+  else if (mission && (!nextMission || nextMission.level !== mission.level)) playSfx('level-complete')
+  else if (result.codexKey && !q.openCodexKeys.includes(result.codexKey)) playSfx('codex')
+  else playSfx('success')
 
   // Level completion — next mission is in a different level (or quest is done)
   if (mission && (!nextMission || nextMission.level !== mission.level)) {
@@ -147,6 +154,7 @@ export const useGameStore = create((set, get) => ({
       if (visionCommands.includes(typed)) {
         const alreadyDone = q.completedVisions.includes(typed)
         if (!alreadyDone) {
+          playSfx('success')
           newEntries.push({ type: 'success', text: `✓ Vision observed: ${input}` })
         } else {
           newEntries.push({ type: 'output', text: `(already observed: ${input})` })
@@ -171,6 +179,7 @@ export const useGameStore = create((set, get) => ({
             ? [...q.unlockedLevels, nextMission.level].sort((a, b) => a - b)
             : q.unlockedLevels
 
+          playSfx('level-complete')
           newEntries.push({ type: 'success', text: '✦ All three reset visions observed!' })
           newEntries.push({ type: 'info', text: `+${xpGained} XP` })
           if (nextMission) {
@@ -211,6 +220,7 @@ export const useGameStore = create((set, get) => ({
       }
 
       // Wrong command during vision
+      playSfx('error')
       newEntries.push({ type: 'error', text: `Try one of: git reset --soft HEAD~1 · git reset --mixed HEAD~1 · git reset --hard HEAD~1` })
       set({
         git: {
@@ -275,9 +285,12 @@ export const useGameStore = create((set, get) => ({
 
       if (failCount >= 4 && mission?.hint && !result.isInfo) {
         newEntries.push({ type: 'hint', text: `  ✦ hint: ${mission.hint}` })
+        playSfx('hint')
       } else if (failCount >= 2 && mission?.hint && !result.isInfo) {
         newEntries.push({ type: 'info', text: '  ✦ Type /hint if you need a nudge' })
       }
+
+      if (!result.isInfo) playSfx('error')
 
       set({
         git: {
@@ -311,6 +324,7 @@ export const useGameStore = create((set, get) => ({
         ? [...q.unlockedLevels, nextMission.level].sort((a, b) => a - b)
         : q.unlockedLevels
 
+    playSfx('success')
     const newEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
     const completedMissions = [...q.completedMissions, missionId]
     const openCodexKeys =
@@ -365,6 +379,7 @@ export const useGameStore = create((set, get) => ({
 
       // Dramatic final mission — output rows one at a time with 400ms delay
       if (result.dramatic) {
+        playSfx('quest-complete')
         result.output.forEach(line => newEntries.push({ type: 'success', text: line }))
         newEntries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"` })
         newEntries.push({ type: 'info', text: `+${result.xp} XP` })
@@ -387,6 +402,7 @@ export const useGameStore = create((set, get) => ({
         return
       }
 
+      // buildSuccessEntries handles level-complete detection; sound is played there
       const successEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
       newEntries.push(...successEntries)
 
@@ -417,10 +433,12 @@ export const useGameStore = create((set, get) => ({
         },
       })
     } else {
+      playSfx('error')
       const failCount = (q.failedAttempts[missionId] ?? 0) + 1
       result.output.forEach(line => newEntries.push({ type: 'error', text: line }))
       if (failCount >= 4 && mission?.hint) {
         newEntries.push({ type: 'hint', text: `  ✦ hint: ${mission.hint}` })
+        playSfx('hint')
       } else if (failCount >= 2 && mission?.hint) {
         newEntries.push({ type: 'info', text: '  ✦ Type /hint if you need a nudge' })
       }
@@ -463,6 +481,7 @@ export const useGameStore = create((set, get) => ({
     const missions = quest === 'git' ? gitMissions : sqlMissions
     const mission = missions[q.currentMission]
     if (!mission?.hint) return
+    playSfx('hint')
     const entries = [{ type: 'hint', text: `  ✦ hint: ${mission.hint}` }]
     set({
       [quest]: {

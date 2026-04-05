@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import Shell from '../components/Shell/Shell'
 import GamePanel from '../components/GamePanel/GamePanel'
 import TerminalPanel from '../components/TerminalPanel/TerminalPanel'
 import QuestComplete from '../components/QuestComplete/QuestComplete'
 import { useGameStore } from '../store/gameStore'
 import { gitMissions } from '../content/missions.git.js'
+import { playSfx } from '../audio/sfx'
 
 const LEVEL_NAMES = {
   1: 'The Empty Cave',
@@ -29,6 +30,13 @@ export default function GitQuestPage() {
   const resetQuest = useGameStore(s => s.resetQuest)
 
   const questComplete = git.currentMission >= gitMissions.length
+  const playedComplete = useRef(false)
+  useEffect(() => {
+    if (questComplete && !playedComplete.current) {
+      playedComplete.current = true
+      playSfx('quest-complete')
+    }
+  }, [questComplete])
 
   const currentMission = gitMissions[git.currentMission]
   const activeLevel = currentMission?.level ?? git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1

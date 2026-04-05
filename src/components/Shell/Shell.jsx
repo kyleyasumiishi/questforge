@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useCallback, useRef, Children } from 'react'
+import { isMuted, toggleMute } from '../../audio/sfx'
 
 const XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1800]
 const LEVEL_TITLES = ['Newcomer', 'Apprentice', 'Journeyman', 'Adept', 'Veteran', 'Master', 'Lorekeeper']
@@ -30,6 +31,7 @@ export default function Shell({
   const levelTitle = LEVEL_TITLES[level - 1] ?? 'Lorekeeper'
   const [splitPct, setSplitPct] = useState(50)
   const [mobilePanel, setMobilePanel] = useState('terminal') // 'world' | 'terminal'
+  const [muted, setMuted] = useState(isMuted)
   const containerRef = useRef(null)
   const dragging = useRef(false)
 
@@ -94,6 +96,14 @@ export default function Shell({
         <span className="text-zinc-600 text-xs hidden md:inline">·</span>
         <span className="text-emerald-400 text-xs font-semibold">Lv {level}</span>
         <span className="text-zinc-500 text-xs hidden md:inline">{levelTitle}</span>
+
+        <button
+          onClick={() => setMuted(toggleMute())}
+          className="text-zinc-600 hover:text-zinc-300 text-xs transition-colors ml-1"
+          title={muted ? 'Unmute sounds' : 'Mute sounds'}
+        >
+          {muted ? '🔇' : '🔊'}
+        </button>
       </div>
 
       {/* Main split — desktop: resizable side-by-side, mobile: tabbed full-width */}
