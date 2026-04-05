@@ -71,7 +71,6 @@ export default function SqlQuestPage() {
         { type: 'info', text: '"The city speaks only to those who ask the right questions."' },
         { type: 'output', text: '' },
         { type: 'output', text: first.narrative },
-        { type: 'info', text: `${first.npcName}: "${first.npcLine}"` },
         { type: 'path', text: `  ▶  ${first.command}` },
       ])
     }

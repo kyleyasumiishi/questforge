@@ -15,7 +15,13 @@
       "Bash(git push:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/gitquest)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/sqlquest)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://questforge-alpha.vercel.app/sqlquest)",
+      "Bash(npx vite:*)",
+      "Bash(node /Users/kyleyasumiishi/Documents/questforge/scripts/generate-og-image.mjs)",
+      "Bash(git -C /Users/kyleyasumiishi/Documents/questforge log --all --pretty=format:\"%an <%ae>\")",
+      "Bash(git -C /Users/kyleyasumiishi/Documents/questforge config --local user.name)",
+      "Bash(git -C /Users/kyleyasumiishi/Documents/questforge config --local user.email)",
+      "Bash(find . -type f \\\\\\( -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.mjs\" -o -name \"*.css\" -o -name \"*.html\" \\\\\\) -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -exec cat {} +)"
     ]
   }
 }

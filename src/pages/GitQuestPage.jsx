@@ -73,7 +73,6 @@ export default function GitQuestPage() {
         { type: 'info', text: '"Build your archive. The realm depends on it."' },
         { type: 'output', text: '' },
         { type: 'output', text: first.narrative },
-        { type: 'info', text: `${first.npcName}: "${first.npcLine}"` },
         { type: 'path', text: `  ▶  ${first.command}` },
       ])
     }

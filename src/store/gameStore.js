@@ -70,7 +70,6 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
   if (nextMission) {
     entries.push({ type: 'output', text: '' })
     entries.push({ type: 'output', text: nextMission.narrative, typewriter: true })
-    entries.push({ type: 'info', text: `${nextMission.npcName}: "${nextMission.npcLine}"`, typewriter: true })
     if (nextMission.specialType === 'conflict') {
       entries.push({ type: 'conflict-editor' })
     } else {
@@ -154,7 +153,6 @@ export const useGameStore = create((set, get) => ({
       const entries = []
       if (mission) {
         entries.push({ type: 'output', text: mission.narrative })
-        entries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"` })
         if (mission.specialType === 'conflict') {
           entries.push({ type: 'conflict-editor' })
         } else {
@@ -229,7 +227,6 @@ export const useGameStore = create((set, get) => ({
           if (nextMission) {
             newEntries.push({ type: 'output', text: '' })
             newEntries.push({ type: 'output', text: nextMission.narrative })
-            newEntries.push({ type: 'info', text: `${nextMission.npcName}: "${nextMission.npcLine}"` })
             newEntries.push({ type: 'path', text: `  ▶  ${nextMission.command}` })
           }
 
