@@ -29,6 +29,7 @@ export default function Shell({
   const pct = xpProgress(xp, level)
   const levelTitle = LEVEL_TITLES[level - 1] ?? 'Lorekeeper'
   const [splitPct, setSplitPct] = useState(50)
+  const [mobilePanel, setMobilePanel] = useState('terminal') // 'world' | 'terminal'
   const containerRef = useRef(null)
   const dragging = useRef(false)
 
@@ -62,8 +63,7 @@ export default function Shell({
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center gap-4 px-4 h-11 border-b border-zinc-800 shrink-0">
-        {/* Home button */}
+      <div className="flex items-center gap-2 md:gap-4 px-2 md:px-4 h-11 border-b border-zinc-800 shrink-0">
         <Link
           to="/"
           className="text-zinc-600 hover:text-zinc-300 text-xs transition-colors shrink-0"
@@ -72,17 +72,17 @@ export default function Shell({
           ← home
         </Link>
 
-        <span className="text-zinc-700 text-xs">|</span>
-        <span className="text-zinc-400 text-xs uppercase tracking-widest">{questTitle}</span>
-        <span className="text-zinc-600 text-xs">·</span>
-        <span className="text-zinc-300 text-xs">{currentLevelName}</span>
+        <span className="text-zinc-700 text-xs hidden md:inline">|</span>
+        <span className="text-zinc-400 text-xs uppercase tracking-widest hidden md:inline">{questTitle}</span>
+        <span className="text-zinc-600 text-xs hidden md:inline">·</span>
+        <span className="text-zinc-300 text-xs truncate">{currentLevelName}</span>
 
         <div className="flex-1" />
 
         {/* XP bar */}
-        <div className="flex items-center gap-2">
-          <span className="text-zinc-500 text-xs">XP</span>
-          <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <span className="text-zinc-500 text-xs hidden md:inline">XP</span>
+          <div className="w-16 md:w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-500"
               style={{ width: `${pct}%` }}
@@ -91,13 +91,14 @@ export default function Shell({
           <span className="text-zinc-400 text-xs">{xp}</span>
         </div>
 
-        <span className="text-zinc-600 text-xs">·</span>
+        <span className="text-zinc-600 text-xs hidden md:inline">·</span>
         <span className="text-emerald-400 text-xs font-semibold">Lv {level}</span>
-        <span className="text-zinc-500 text-xs">{levelTitle}</span>
+        <span className="text-zinc-500 text-xs hidden md:inline">{levelTitle}</span>
       </div>
 
-      {/* Main split — resizable */}
-      <div ref={containerRef} className="flex flex-1 overflow-hidden">
+      {/* Main split — desktop: resizable side-by-side, mobile: tabbed full-width */}
+      {/* Desktop */}
+      <div ref={containerRef} className="hidden md:flex flex-1 overflow-hidden">
         <div style={{ width: `${splitPct}%` }} className="shrink-0 overflow-hidden">
           {kids[0]}
         </div>
@@ -110,9 +111,45 @@ export default function Shell({
         </div>
       </div>
 
+      {/* Mobile */}
+      <div className="flex md:hidden flex-1 overflow-hidden">
+        <div className={`w-full h-full ${mobilePanel === 'world' ? '' : 'hidden'}`}>
+          {kids[0]}
+        </div>
+        <div className={`w-full h-full ${mobilePanel === 'terminal' ? '' : 'hidden'}`}>
+          {kids[1]}
+        </div>
+      </div>
+
+      {/* Mobile panel toggle */}
+      <div className="flex md:hidden border-t border-zinc-800 shrink-0">
+        <button
+          onClick={() => setMobilePanel('world')}
+          className={[
+            'flex-1 py-2 text-xs text-center transition-colors',
+            mobilePanel === 'world'
+              ? 'text-emerald-400 bg-zinc-900'
+              : 'text-zinc-600 hover:text-zinc-400',
+          ].join(' ')}
+        >
+          World
+        </button>
+        <button
+          onClick={() => setMobilePanel('terminal')}
+          className={[
+            'flex-1 py-2 text-xs text-center transition-colors',
+            mobilePanel === 'terminal'
+              ? 'text-emerald-400 bg-zinc-900'
+              : 'text-zinc-600 hover:text-zinc-400',
+          ].join(' ')}
+        >
+          Terminal
+        </button>
+      </div>
+
       {/* Level strip */}
-      <div className="flex items-center gap-1.5 px-4 h-10 border-t border-zinc-800 overflow-x-auto shrink-0">
-        <span className="text-zinc-600 text-xs mr-1 shrink-0">Levels</span>
+      <div className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 h-10 border-t border-zinc-800 overflow-x-auto shrink-0">
+        <span className="text-zinc-600 text-xs mr-1 shrink-0 hidden md:inline">Levels</span>
         {Array.from({ length: totalLevels }, (_, i) => {
           const num = i + 1
           const unlocked = unlockedLevels.includes(num)
@@ -130,7 +167,7 @@ export default function Shell({
                 `Level ${num} — locked`
               }
               className={[
-                'shrink-0 w-7 h-7 rounded text-xs font-mono font-bold transition-colors',
+                'shrink-0 w-6 h-6 md:w-7 md:h-7 rounded text-xs font-mono font-bold transition-colors',
                 done ? 'bg-emerald-900 text-emerald-400 hover:bg-emerald-800 cursor-pointer' : '',
                 active ? 'bg-emerald-600 text-white cursor-default' : '',
                 !unlocked ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' : '',
@@ -144,14 +181,15 @@ export default function Shell({
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center gap-4 px-4 h-7 bg-zinc-900 border-t border-zinc-800 shrink-0">
-        <StatusItem label="Level" value={`${currentLevelNum} — ${currentLevelName}`} />
+      <div className="flex items-center gap-2 md:gap-4 px-2 md:px-4 h-7 bg-zinc-900 border-t border-zinc-800 shrink-0">
+        <StatusItem label="Lv" value={currentLevelNum} className="md:hidden" />
+        <StatusItem label="Level" value={`${currentLevelNum} — ${currentLevelName}`} className="hidden md:inline" />
         <Divider />
         <StatusItem label="XP" value={xp} />
-        <Divider />
-        <StatusItem label="Missions" value={missionsCompleted} />
-        <Divider />
-        <StatusItem label="Learned" value={commandsLearned} />
+        <span className="hidden md:inline"><Divider /></span>
+        <StatusItem label="Missions" value={missionsCompleted} className="hidden md:inline" />
+        <span className="hidden md:inline"><Divider /></span>
+        <StatusItem label="Learned" value={commandsLearned} className="hidden md:inline" />
         <div className="flex-1" />
         <span className="text-zinc-700 text-xs">auto-saved ✓</span>
       </div>
@@ -159,9 +197,9 @@ export default function Shell({
   )
 }
 
-function StatusItem({ label, value }) {
+function StatusItem({ label, value, className = '' }) {
   return (
-    <span className="text-xs">
+    <span className={`text-xs ${className}`}>
       <span className="text-zinc-600">{label}: </span>
       <span className="text-zinc-400">{value}</span>
     </span>

@@ -94,6 +94,7 @@ export default function GitQuestPage() {
         onSubmit={submitGitCommand}
         onResolveConflict={resolveGitConflict}
         prompt={`~/quest-repo (${git.gitState?.HEAD ?? 'main'}) $`}
+        shortPrompt={`(${git.gitState?.HEAD ?? 'main'}) $`}
         quest="git"
         disabled={questComplete}
       />

@@ -16,7 +16,8 @@ export default function TerminalPanel({
   history = [],
   onSubmit,
   onResolveConflict,
-  prompt = '~/quest-repo (main) $',
+  prompt = '$',
+  shortPrompt = '$',
   disabled = false,
   quest = 'git',
 }) {
@@ -65,7 +66,7 @@ export default function TerminalPanel({
       onClick={() => inputRef.current?.focus()}
     >
       {/* Scrollable history */}
-      <div className="flex-1 overflow-y-auto terminal-scroll p-4 space-y-0.5 text-sm leading-relaxed">
+      <div className="flex-1 overflow-y-auto terminal-scroll p-2 md:p-4 space-y-0.5 text-xs md:text-sm leading-relaxed">
         {history.map((entry, i) => {
           if (entry.type === 'codex-block') {
             return (
@@ -105,8 +106,11 @@ export default function TerminalPanel({
       </div>
 
       {/* Input row */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-800 shrink-0">
-        <span className="text-zinc-600 text-sm select-none whitespace-nowrap">{prompt}</span>
+      <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-3 border-t border-zinc-800 shrink-0">
+        <span className="text-zinc-600 text-xs md:text-sm select-none whitespace-nowrap">
+          <span className="hidden md:inline">{prompt}</span>
+          <span className="md:hidden">{shortPrompt}</span>
+        </span>
         <input
           ref={inputRef}
           type="text"
@@ -119,7 +123,7 @@ export default function TerminalPanel({
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          className="flex-1 bg-transparent text-zinc-100 text-sm outline-none caret-emerald-400 disabled:opacity-40"
+          className="flex-1 bg-transparent text-zinc-100 text-xs md:text-sm outline-none caret-emerald-400 disabled:opacity-40"
         />
       </div>
     </div>

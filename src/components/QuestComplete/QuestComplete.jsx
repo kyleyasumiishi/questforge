@@ -20,7 +20,7 @@ export default function QuestComplete({
         <p className="text-zinc-400 text-sm">{questTitle}</p>
 
         {/* Stats */}
-        <div className="flex justify-center gap-8 py-4">
+        <div className="flex justify-center gap-4 md:gap-8 py-4">
           <Stat label="Total XP" value={xp} />
           <Stat label="Level" value={level} />
           <Stat label="Commands" value={commandsLearned.length} />
@@ -44,10 +44,10 @@ export default function QuestComplete({
         )}
 
         {/* CTAs */}
-        <div className="flex justify-center gap-4 pt-4">
+        <div className="flex flex-col md:flex-row justify-center gap-3 md:gap-4 pt-4">
           <Link
             to="/"
-            className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded hover:bg-zinc-700 transition-colors text-sm"
+            className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded hover:bg-zinc-700 transition-colors text-sm text-center"
           >
             Return Home
           </Link>

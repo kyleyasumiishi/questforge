@@ -22,13 +22,13 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-zinc-950 gap-12">
+    <div className="flex flex-col items-center justify-center h-screen bg-zinc-950 gap-8 md:gap-12 px-4">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-zinc-100 tracking-tight">QuestForge</h1>
-        <p className="text-zinc-500 mt-2 text-sm">Learn developer tools through narrative RPG adventures</p>
+        <h1 className="text-2xl md:text-4xl font-bold text-zinc-100 tracking-tight">QuestForge</h1>
+        <p className="text-zinc-500 mt-2 text-xs md:text-sm">Learn developer tools through narrative RPG adventures</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-lg md:max-w-none md:w-auto">
         <QuestCard
           title="GitQuest"
           subtitle="The Repo Chronicles"
@@ -56,7 +56,7 @@ export default function HomeScreen() {
 
 function QuestCard({ title, subtitle, description, href, accent, border, progress, onReset }) {
   return (
-    <div className={`flex flex-col gap-3 w-64 p-6 rounded-lg border bg-zinc-900 ${border}`}>
+    <div className={`flex flex-col gap-3 w-full md:w-64 p-5 md:p-6 rounded-lg border bg-zinc-900 ${border}`}>
       <div>
         <div className={`text-xl font-bold ${accent}`}>{title}</div>
         <div className="text-zinc-400 text-sm">{subtitle}</div>

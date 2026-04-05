@@ -91,6 +91,7 @@ export default function SqlQuestPage() {
         history={sql.terminalHistory}
         onSubmit={submitSqlCommand}
         prompt="queryra>"
+        shortPrompt=">"
         quest="sql"
         disabled={questComplete}
       />
