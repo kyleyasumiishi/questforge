@@ -97,7 +97,7 @@ export default function GitQuestPage() {
       <GamePanel
         levelNum={activeLevel}
         npcName={currentMission?.npcName ?? 'The Elder'}
-        npcLine={currentMission?.npcLine ?? ''}
+        npcLine={git.currentMission > 0 ? (gitMissions[git.currentMission - 1]?.npcLine ?? '') : ''}
         quest="git"
         unlockedKeys={git.openCodexKeys}
         reaction={git.lastReaction}

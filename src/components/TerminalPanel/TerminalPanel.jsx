@@ -53,18 +53,18 @@ export default function TerminalPanel({
 }) {
   const [input, setInput] = useState('')
   const [historyIdx, setHistoryIdx] = useState(-1)
-  const [twDone, setTwDone] = useState(new Set()) // indices that finished animating
+  const [twDone, setTwDone] = useState(new Set())
   const bottomRef = useRef(null)
+  const scrollAreaRef = useRef(null)
   const inputRef = useRef(null)
-  const prevLenRef = useRef(history.length) // track previous history length
-  const newStartRef = useRef(history.length) // index where new entries begin
+  const prevLenRef = useRef(history.length)
+  const newStartRef = useRef(history.length)
 
   // When history grows, mark new entries as animatable
   if (history.length > prevLenRef.current) {
     newStartRef.current = prevLenRef.current
     prevLenRef.current = history.length
   } else if (history.length < prevLenRef.current) {
-    // History shrunk (e.g. /clear) — reset
     newStartRef.current = 0
     prevLenRef.current = history.length
   }
@@ -77,7 +77,7 @@ export default function TerminalPanel({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [history])
+  }, [history.length])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') {
@@ -109,8 +109,15 @@ export default function TerminalPanel({
       onClick={() => inputRef.current?.focus()}
     >
       {/* Scrollable history */}
-      <div className="flex-1 overflow-y-auto terminal-scroll p-2 md:p-4 space-y-0.5 text-xs md:text-sm leading-relaxed">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto terminal-scroll p-2 md:p-4 space-y-0.5 text-xs md:text-sm leading-relaxed">
         {history.map((entry, i) => {
+          if (entry.clearMarker) {
+            return (
+              <div key={i} className={TYPE_STYLES[entry.type] ?? 'text-zinc-400'}>
+                {entry.text}
+              </div>
+            )
+          }
           if (entry.type === 'codex-block') {
             return (
               <Codex
@@ -140,7 +147,10 @@ export default function TerminalPanel({
           const canAnimate = isNew && entry.typewriter && !twDone.has(i)
 
           return (
-            <div key={i} className={TYPE_STYLES[entry.type] ?? 'text-zinc-400'}>
+            <div
+              key={i}
+              className={TYPE_STYLES[entry.type] ?? 'text-zinc-400'}
+            >
               {entry.type === 'command' && (
                 <span className="text-zinc-600 select-none mr-2">$</span>
               )}
@@ -155,6 +165,16 @@ export default function TerminalPanel({
             </div>
           )
         })}
+        {/* After a /clear, add a spacer so the mission context sits at the top.
+            Only show if the last clear marker is within the last 10 entries (still "active"). */}
+        {(() => {
+          for (let i = history.length - 1; i >= Math.max(0, history.length - 10); i--) {
+            if (history[i]?.clearMarker) return (
+              <div key="clear-spacer" style={{ minHeight: (scrollAreaRef.current?.clientHeight ?? 400) - 100 }} />
+            )
+          }
+          return null
+        })()}
         <div ref={bottomRef} />
       </div>
 

@@ -95,7 +95,7 @@ export default function SqlQuestPage() {
       <GamePanel
         levelNum={activeLevel}
         npcName={currentMission?.npcName ?? 'The Veteran Excavator'}
-        npcLine={currentMission?.npcLine ?? ''}
+        npcLine={sql.currentMission > 0 ? (sqlMissions[sql.currentMission - 1]?.npcLine ?? '') : ''}
         quest="sql"
         unlockedKeys={sql.openCodexKeys}
         reaction={sql.lastReaction}

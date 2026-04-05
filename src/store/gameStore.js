@@ -147,7 +147,12 @@ export const useGameStore = create((set, get) => ({
     if (cmd === '/clear') {
       const missions = quest === 'git' ? gitMissions : sqlMissions
       const mission = missions[state[quest].currentMission]
-      const entries = []
+      const entries = [
+        { type: 'command', text: input },
+        { type: 'output', text: '' },
+        { type: 'info', text: '────────────────────────────────────────', clearMarker: true },
+        { type: 'output', text: '' },
+      ]
       if (mission) {
         entries.push({ type: 'output', text: mission.narrative })
         if (mission.specialType === 'conflict') {
@@ -156,8 +161,7 @@ export const useGameStore = create((set, get) => ({
           entries.push({ type: 'path', text: `  ▶  ${mission.command}` })
         }
       }
-      // Only clear visual — don't persist so full history survives in localStorage
-      set({ [quest]: { ...state[quest], terminalHistory: entries } })
+      state.addToHistory(quest, entries)
       return true
     }
     if (cmd === '/help') {
