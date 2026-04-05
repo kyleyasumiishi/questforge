@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useCallback, useRef, Children } from 'react'
 
 const XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1800]
 const LEVEL_TITLES = ['Newcomer', 'Apprentice', 'Journeyman', 'Adept', 'Veteran', 'Master', 'Lorekeeper']
@@ -27,6 +28,36 @@ export default function Shell({
 }) {
   const pct = xpProgress(xp, level)
   const levelTitle = LEVEL_TITLES[level - 1] ?? 'Lorekeeper'
+  const [splitPct, setSplitPct] = useState(50)
+  const containerRef = useRef(null)
+  const dragging = useRef(false)
+
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault()
+    dragging.current = true
+
+    const onMouseMove = (e) => {
+      if (!dragging.current || !containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const pct = ((e.clientX - rect.left) / rect.width) * 100
+      setSplitPct(Math.min(80, Math.max(20, pct)))
+    }
+
+    const onMouseUp = () => {
+      dragging.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
+
+  const kids = Children.toArray(children)
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 overflow-hidden">
@@ -65,9 +96,18 @@ export default function Shell({
         <span className="text-zinc-500 text-xs">{levelTitle}</span>
       </div>
 
-      {/* Main split */}
-      <div className="flex flex-1 overflow-hidden">
-        {children}
+      {/* Main split — resizable */}
+      <div ref={containerRef} className="flex flex-1 overflow-hidden">
+        <div style={{ width: `${splitPct}%` }} className="shrink-0 overflow-hidden">
+          {kids[0]}
+        </div>
+        <div
+          onMouseDown={onMouseDown}
+          className="w-1 shrink-0 bg-zinc-800 hover:bg-emerald-600 cursor-col-resize transition-colors"
+        />
+        <div className="flex-1 overflow-hidden">
+          {kids[1]}
+        </div>
       </div>
 
       {/* Level strip */}

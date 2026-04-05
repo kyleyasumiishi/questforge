@@ -22,9 +22,14 @@ export default function GamePanel({
     const handleResize = () => renderer.resize()
     window.addEventListener('resize', handleResize)
 
+    // Also observe parent resize (for draggable divider)
+    const ro = new ResizeObserver(handleResize)
+    ro.observe(canvas.parentElement)
+
     return () => {
       renderer.stop()
       window.removeEventListener('resize', handleResize)
+      ro.disconnect()
     }
   }, [quest])
 
@@ -34,7 +39,7 @@ export default function GamePanel({
   }, [levelNum, npcName, npcLine])
 
   return (
-    <div className="flex flex-col w-1/2 bg-zinc-900 shrink-0 overflow-hidden">
+    <div className="flex flex-col w-full h-full bg-zinc-900 overflow-hidden">
       <div className="flex-1 relative">
         <canvas
           ref={canvasRef}

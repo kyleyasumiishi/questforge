@@ -61,7 +61,7 @@ export default function TerminalPanel({
 
   return (
     <div
-      className="flex flex-col flex-1 bg-zinc-950 border-l border-zinc-800 overflow-hidden"
+      className="flex flex-col w-full h-full bg-zinc-950 overflow-hidden"
       onClick={() => inputRef.current?.focus()}
     >
       {/* Scrollable history */}
