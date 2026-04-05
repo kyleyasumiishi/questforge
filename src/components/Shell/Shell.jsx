@@ -24,6 +24,7 @@ export default function Shell({
   unlockedLevels = [1],
   activeLevel = 1,
   recentlyCompletedLevel = null,
+  missionProgress = null, // { current, total }
   onSelectLevel,
   children,
 }) {
@@ -78,6 +79,11 @@ export default function Shell({
         <span className="text-zinc-400 text-xs uppercase tracking-widest hidden md:inline">{questTitle}</span>
         <span className="text-zinc-600 text-xs hidden md:inline">·</span>
         <span className="text-zinc-300 text-xs truncate">{currentLevelName}</span>
+        {missionProgress && (
+          <span className="text-zinc-600 text-xs shrink-0">
+            {missionProgress.current}/{missionProgress.total}
+          </span>
+        )}
 
         <div className="flex-1" />
 

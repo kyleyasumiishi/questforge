@@ -138,16 +138,40 @@ export const useGameStore = create((set, get) => ({
     persistSave(get())
   },
 
+  handleMetaCommand(quest, input) {
+    const cmd = input.trim().toLowerCase()
+    const state = get()
+
+    if (cmd === '/hint') {
+      state.addToHistory(quest, [{ type: 'command', text: input }])
+      state.showHint(quest)
+      return true
+    }
+    if (cmd === '/clear') {
+      set({ [quest]: { ...state[quest], terminalHistory: [] } })
+      persistSave(get())
+      return true
+    }
+    if (cmd === '/help') {
+      state.addToHistory(quest, [
+        { type: 'command', text: input },
+        { type: 'info', text: 'Available commands:' },
+        { type: 'output', text: '  /hint     — Show a hint for the current mission' },
+        { type: 'output', text: '  /clear    — Clear terminal history' },
+        { type: 'output', text: '  /help     — Show this help message' },
+        { type: 'output', text: '' },
+        { type: 'output', text: '  ↑ / ↓     — Browse command history' },
+      ])
+      return true
+    }
+    return false
+  },
+
   submitGitCommand(input) {
     const state = get()
     const q = state.git
 
-    // Handle /hint command
-    if (input.trim().toLowerCase() === '/hint') {
-      state.addToHistory('git', [{ type: 'command', text: input }])
-      state.showHint('git')
-      return
-    }
+    if (state.handleMetaCommand('git', input)) return
 
     const mission = gitMissions[q.currentMission]
     const missionId = mission?.id ?? `git-mission-${q.currentMission}`
@@ -366,12 +390,7 @@ export const useGameStore = create((set, get) => ({
     const state = get()
     const q = state.sql
 
-    // Handle /hint command
-    if (input.trim().toLowerCase() === '/hint') {
-      state.addToHistory('sql', [{ type: 'command', text: input }])
-      state.showHint('sql')
-      return
-    }
+    if (state.handleMetaCommand('sql', input)) return
 
     const mission = sqlMissions[q.currentMission]
     const missionId = mission?.id ?? `sql-mission-${q.currentMission}`

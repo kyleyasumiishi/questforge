@@ -41,6 +41,10 @@ export default function SqlQuestPage() {
   const activeLevel = currentMission?.level ?? sql.unlockedLevels[sql.unlockedLevels.length - 1] ?? 1
   const levelName = LEVEL_NAMES[activeLevel] ?? 'The Grand Archive'
 
+  const levelMissions = sqlMissions.filter(m => m.level === activeLevel)
+  const missionInLevel = currentMission ? levelMissions.indexOf(currentMission) + 1 : levelMissions.length
+  const missionProgress = { current: missionInLevel, total: levelMissions.length }
+
   const recentlyCompletedLevel = (() => {
     for (let i = sql.terminalHistory.length - 1; i >= Math.max(0, sql.terminalHistory.length - 15); i--) {
       if (sql.terminalHistory[i]?.type === 'level-complete') return sql.terminalHistory[i].level
@@ -86,6 +90,7 @@ export default function SqlQuestPage() {
       unlockedLevels={sql.unlockedLevels}
       activeLevel={activeLevel}
       recentlyCompletedLevel={recentlyCompletedLevel}
+      missionProgress={missionProgress}
       onSelectLevel={num => jumpToLevel('sql', num, sqlMissions)}
     >
       <GamePanel

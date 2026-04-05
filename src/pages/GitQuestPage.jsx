@@ -42,6 +42,10 @@ export default function GitQuestPage() {
   const activeLevel = currentMission?.level ?? git.unlockedLevels[git.unlockedLevels.length - 1] ?? 1
   const levelName = LEVEL_NAMES[activeLevel] ?? 'The Sanctum Spire'
 
+  const levelMissions = gitMissions.filter(m => m.level === activeLevel)
+  const missionInLevel = currentMission ? levelMissions.indexOf(currentMission) + 1 : levelMissions.length
+  const missionProgress = { current: missionInLevel, total: levelMissions.length }
+
   // Find most recently completed level for badge flash
   const recentlyCompletedLevel = (() => {
     for (let i = git.terminalHistory.length - 1; i >= Math.max(0, git.terminalHistory.length - 15); i--) {
@@ -88,6 +92,7 @@ export default function GitQuestPage() {
       unlockedLevels={git.unlockedLevels}
       activeLevel={activeLevel}
       recentlyCompletedLevel={recentlyCompletedLevel}
+      missionProgress={missionProgress}
       onSelectLevel={num => jumpToLevel('git', num, gitMissions)}
     >
       <GamePanel
