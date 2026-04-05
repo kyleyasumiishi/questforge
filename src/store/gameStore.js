@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import { loadSave, persistSave } from './persistence'
 import { evaluateGitCommand, resolveConflict } from '../engines/gitEngine'
+import { evaluateSqlCommand, createDataset } from '../engines/sqlEngine'
 import { defaultGitState } from './gitStore'
 import { gitMissions } from '../content/missions.git.js'
+import { sqlMissions } from '../content/missions.sql.js'
 
 const XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1800]
 const LEVEL_TITLES = ['Newcomer', 'Apprentice', 'Journeyman', 'Adept', 'Veteran', 'Master', 'Lorekeeper']
@@ -65,8 +67,15 @@ const defaultQuestState = {
   terminalHistory: [],
   openCodexKeys: [],
   failedAttempts: {},
-  completedVisions: [],   // tracks which vision variants have been typed
+  completedVisions: [],
   gitState: { ...defaultGitState },
+}
+
+const defaultSqlQuestState = {
+  ...defaultQuestState,
+  gitState: undefined,
+  dataset: createDataset(),
+  dramaticPending: false,
 }
 
 const saved = loadSave()
@@ -81,7 +90,12 @@ export const useGameStore = create((set, get) => ({
     failedAttempts: saved.git?.failedAttempts ?? {},
     completedVisions: saved.git?.completedVisions ?? [],
   },
-  sql: { ...defaultQuestState, ...saved.sql },
+  sql: {
+    ...defaultSqlQuestState,
+    ...saved.sql,
+    dataset: saved.sql?.dataset ?? createDataset(),
+    failedAttempts: saved.sql?.failedAttempts ?? {},
+  },
 
   setActiveQuest(quest) {
     set({ activeQuest: quest })
@@ -297,6 +311,97 @@ export const useGameStore = create((set, get) => ({
     persistSave(get())
   },
 
+  submitSqlCommand(input) {
+    const state = get()
+    const q = state.sql
+    const mission = sqlMissions[q.currentMission]
+    const missionId = mission?.id ?? `sql-mission-${q.currentMission}`
+    const newEntries = [{ type: 'command', text: input }]
+
+    const result = evaluateSqlCommand(input, q.dataset, q.currentMission)
+
+    if (result.success) {
+      const newXp = q.xp + (result.xp ?? 0)
+      const newLevel = levelForXp(newXp)
+      const newMissionIndex = q.currentMission + 1
+      const nextMission = sqlMissions[newMissionIndex]
+
+      const newUnlockedLevels =
+        nextMission && !q.unlockedLevels.includes(nextMission.level)
+          ? [...q.unlockedLevels, nextMission.level].sort((a, b) => a - b)
+          : q.unlockedLevels
+
+      // Dramatic final mission — output rows one at a time with 400ms delay
+      if (result.dramatic) {
+        result.output.forEach(line => newEntries.push({ type: 'success', text: line }))
+        newEntries.push({ type: 'info', text: `${mission.npcName}: "${mission.npcLine}"` })
+        newEntries.push({ type: 'info', text: `+${result.xp} XP` })
+        newEntries.push({ type: 'success', text: '🏺 SQLQuest Complete!' })
+
+        set({
+          sql: {
+            ...q,
+            terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
+            currentMission: newMissionIndex,
+            completedMissions: [...q.completedMissions, missionId],
+            xp: newXp,
+            level: newLevel,
+            unlockedLevels: newUnlockedLevels,
+            dataset: result.newDataset,
+            dramaticPending: false,
+          },
+        })
+        persistSave(get())
+        return
+      }
+
+      const successEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
+      newEntries.push(...successEntries)
+
+      const completedMissions = q.completedMissions.includes(missionId)
+        ? q.completedMissions
+        : [...q.completedMissions, missionId]
+
+      const openCodexKeys =
+        result.codexKey && !q.openCodexKeys.includes(result.codexKey)
+          ? [...q.openCodexKeys, result.codexKey]
+          : q.openCodexKeys
+
+      const newFailedAttempts = { ...q.failedAttempts }
+      delete newFailedAttempts[missionId]
+
+      set({
+        sql: {
+          ...q,
+          terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
+          currentMission: newMissionIndex,
+          completedMissions,
+          xp: newXp,
+          level: newLevel,
+          unlockedLevels: newUnlockedLevels,
+          openCodexKeys,
+          failedAttempts: newFailedAttempts,
+          dataset: result.newDataset,
+        },
+      })
+    } else {
+      const failCount = (q.failedAttempts[missionId] ?? 0) + 1
+      result.output.forEach(line => newEntries.push({ type: 'error', text: line }))
+      if (failCount >= 2 && mission?.hint) {
+        newEntries.push({ type: 'info', text: `  ✦ hint: ${mission.hint}` })
+      }
+      set({
+        sql: {
+          ...q,
+          terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
+          failedAttempts: { ...q.failedAttempts, [missionId]: failCount },
+        },
+      })
+    }
+
+    persistSave(get())
+  },
+
   jumpToLevel(quest, levelNum, missions) {
     // Find the index of the first mission belonging to levelNum
     const idx = missions.findIndex(m => m.level === levelNum)
@@ -320,11 +425,11 @@ export const useGameStore = create((set, get) => ({
 
   resetQuest(quest) {
     if (quest === 'git') localStorage.removeItem('questforge-git-seeded')
+    if (quest === 'sql') localStorage.removeItem('questforge-sql-seeded')
     set({
-      [quest]: {
-        ...defaultQuestState,
-        gitState: quest === 'git' ? { ...defaultGitState } : undefined,
-      },
+      [quest]: quest === 'git'
+        ? { ...defaultQuestState, gitState: { ...defaultGitState } }
+        : { ...defaultSqlQuestState, dataset: createDataset() },
     })
     persistSave(get())
   },

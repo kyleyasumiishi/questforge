@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { gitCodex } from '../../content/codex.git.js'
+import { sqlCodex } from '../../content/codex.sql.js'
 
 const TABS = ['ELI5', 'Savvy', 'Man page']
 const TAB_KEYS = ['eli5', 'savvy', 'manpage']
 
 const CODEX_SOURCES = {
   git: gitCodex,
-  // sql: sqlCodex  — added in Phase 8
+  sql: sqlCodex,
 }
 
 export default function Codex({ codexKey, quest = 'git', defaultOpen = false, xp = 40 }) {
