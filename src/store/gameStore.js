@@ -46,9 +46,10 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
     })
   }
 
-  // Sound effects for success path
-  if (newLevel > q.level) playSfx('levelup')
-  else if (mission && (!nextMission || nextMission.level !== mission.level)) playSfx('level-complete')
+  // Sound effects + reaction for success path
+  let reactionType = 'jump'
+  if (newLevel > q.level) { playSfx('levelup'); reactionType = 'celebrate' }
+  else if (mission && (!nextMission || nextMission.level !== mission.level)) { playSfx('level-complete'); reactionType = 'celebrate' }
   else if (result.codexKey && !q.openCodexKeys.includes(result.codexKey)) playSfx('codex')
   else playSfx('success')
 
@@ -76,7 +77,12 @@ function buildSuccessEntries(mission, result, q, nextMission, newLevel) {
     }
   }
 
-  return entries
+  return { entries, reactionType }
+}
+
+let reactionCounter = 0
+function makeReaction(type) {
+  return { type, key: ++reactionCounter }
 }
 
 const defaultQuestState = {
@@ -90,6 +96,7 @@ const defaultQuestState = {
   failedAttempts: {},
   completedVisions: [],
   gitState: { ...defaultGitState },
+  lastReaction: null,
 }
 
 const defaultSqlQuestState = {
@@ -199,6 +206,7 @@ export const useGameStore = create((set, get) => ({
               level: newLevel,
               unlockedLevels: newUnlockedLevels,
               completedVisions: [],
+              lastReaction: makeReaction('celebrate'),
             },
           })
         } else {
@@ -211,6 +219,7 @@ export const useGameStore = create((set, get) => ({
               ...q,
               terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
               completedVisions,
+              lastReaction: makeReaction('jump'),
             },
           })
         }
@@ -226,6 +235,7 @@ export const useGameStore = create((set, get) => ({
         git: {
           ...q,
           terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
+          lastReaction: makeReaction('shake'),
         },
       })
       persistSave(get())
@@ -246,7 +256,7 @@ export const useGameStore = create((set, get) => ({
           ? [...q.unlockedLevels, nextMission.level].sort((a, b) => a - b)
           : q.unlockedLevels
 
-      const successEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
+      const { entries: successEntries, reactionType } = buildSuccessEntries(mission, result, q, nextMission, newLevel)
       newEntries.push(...successEntries)
 
       const completedMissions = q.completedMissions.includes(missionId)
@@ -273,6 +283,7 @@ export const useGameStore = create((set, get) => ({
           openCodexKeys,
           failedAttempts: newFailedAttempts,
           gitState: result.newGitState,
+          lastReaction: makeReaction(reactionType),
         },
       })
     } else {
@@ -297,6 +308,7 @@ export const useGameStore = create((set, get) => ({
           ...q,
           terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
           failedAttempts: newFailedAttempts,
+          lastReaction: result.isInfo ? q.lastReaction : makeReaction('shake'),
         },
       })
     }
@@ -325,7 +337,7 @@ export const useGameStore = create((set, get) => ({
         : q.unlockedLevels
 
     playSfx('success')
-    const newEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
+    const { entries: newEntries, reactionType } = buildSuccessEntries(mission, result, q, nextMission, newLevel)
     const completedMissions = [...q.completedMissions, missionId]
     const openCodexKeys =
       result.codexKey && !q.openCodexKeys.includes(result.codexKey)
@@ -343,6 +355,7 @@ export const useGameStore = create((set, get) => ({
         unlockedLevels: newUnlockedLevels,
         openCodexKeys,
         gitState: result.newGitState,
+        lastReaction: makeReaction(reactionType),
       },
     })
 
@@ -396,14 +409,14 @@ export const useGameStore = create((set, get) => ({
             unlockedLevels: newUnlockedLevels,
             dataset: result.newDataset,
             dramaticPending: false,
+            lastReaction: makeReaction('celebrate'),
           },
         })
         persistSave(get())
         return
       }
 
-      // buildSuccessEntries handles level-complete detection; sound is played there
-      const successEntries = buildSuccessEntries(mission, result, q, nextMission, newLevel)
+      const { entries: successEntries, reactionType } = buildSuccessEntries(mission, result, q, nextMission, newLevel)
       newEntries.push(...successEntries)
 
       const completedMissions = q.completedMissions.includes(missionId)
@@ -430,6 +443,7 @@ export const useGameStore = create((set, get) => ({
           openCodexKeys,
           failedAttempts: newFailedAttempts,
           dataset: result.newDataset,
+          lastReaction: makeReaction(reactionType),
         },
       })
     } else {
@@ -447,6 +461,7 @@ export const useGameStore = create((set, get) => ({
           ...q,
           terminalHistory: [...q.terminalHistory, ...newEntries].slice(-100),
           failedAttempts: { ...q.failedAttempts, [missionId]: failCount },
+          lastReaction: makeReaction('shake'),
         },
       })
     }

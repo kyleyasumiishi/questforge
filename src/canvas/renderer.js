@@ -1,8 +1,56 @@
 import { PLAYER_SPRITE, NPC_SPRITE, drawSprite } from './sprites'
 import { GIT_ZONES, SQL_ZONES } from './zones'
+import {
+  createStars, drawStars,
+  createFireflies, drawFireflies,
+  createDust, drawDust,
+  createTorches, drawTorches,
+  createRain, drawRain,
+  createSnow, drawSnow,
+} from './particles'
 
 const TILE = 16
 const SPRITE_SCALE = 2
+
+// Define which ambient effects each zone gets
+// Git zones
+const GIT_ZONE_FX = {
+  1:  { stars: 15, fireflies: 4, torches: [[0.12, 0.55], [0.88, 0.55]] },
+  2:  { dust: 20, torches: [[0.08, 0.5], [0.92, 0.5]] },
+  3:  { torches: [[0.2, 0.48], [0.8, 0.48], [0.5, 0.42]], dust: 10 },
+  4:  { stars: 25, rain: 30 },
+  5:  { fireflies: 8, dust: 15 },
+  6:  { stars: 10, dust: 12, torches: [[0.3, 0.45], [0.7, 0.45]] },
+  7:  { snow: 35, stars: 20 },
+  8:  { stars: 12, dust: 18, torches: [[0.25, 0.5], [0.75, 0.5]] },
+  9:  { torches: [[0.1, 0.5], [0.35, 0.5], [0.65, 0.5], [0.9, 0.5]], dust: 8 },
+  10: { stars: 40, fireflies: 6 },
+}
+
+// SQL zones
+const SQL_ZONE_FX = {
+  1:  { dust: 25, dustColor: '#d4a520' },
+  2:  { dust: 15, torches: [[0.15, 0.5], [0.85, 0.5]] },
+  3:  { dust: 10, torches: [[0.2, 0.45], [0.8, 0.45]] },
+  4:  { stars: 8, dust: 12, torches: [[0.3, 0.5], [0.7, 0.5]] },
+  5:  { torches: [[0.15, 0.5], [0.5, 0.5], [0.85, 0.5]], dust: 8 },
+  6:  { rain: 20, dust: 10 },
+  7:  { stars: 10, dust: 15, torches: [[0.25, 0.5], [0.75, 0.5]] },
+  8:  { torches: [[0.3, 0.45], [0.6, 0.45]], dust: 10 },
+  9:  { stars: 15, fireflies: 5 },
+  10: { stars: 35, fireflies: 8 },
+}
+
+function buildFx(fxDef, level) {
+  const fx = {}
+  if (fxDef.stars)     fx.stars = createStars(fxDef.stars, level * 100 + 1)
+  if (fxDef.fireflies) fx.fireflies = createFireflies(fxDef.fireflies, level * 100 + 2)
+  if (fxDef.dust)      { fx.dust = createDust(fxDef.dust, level * 100 + 3); fx.dustColor = fxDef.dustColor }
+  if (fxDef.torches)   fx.torches = createTorches(fxDef.torches, level * 100 + 4)
+  if (fxDef.rain)      fx.rain = createRain(fxDef.rain, level * 100 + 5)
+  if (fxDef.snow)      fx.snow = createSnow(fxDef.snow, level * 100 + 6)
+  return fx
+}
 
 export function createRenderer(canvas, quest = 'git') {
   const ctx = canvas.getContext('2d')
@@ -13,6 +61,44 @@ export function createRenderer(canvas, quest = 'git') {
   let npcLine = ''
 
   const zones = quest === 'git' ? GIT_ZONES : SQL_ZONES
+  const zoneFxDefs = quest === 'git' ? GIT_ZONE_FX : SQL_ZONE_FX
+
+  // Pre-build particle systems for all zones
+  const zoneFx = {}
+  for (const lvl of Object.keys(zoneFxDefs)) {
+    zoneFx[lvl] = buildFx(zoneFxDefs[lvl], Number(lvl))
+  }
+
+  // Reaction animation state
+  let reaction = null  // { type, startTime, duration }
+
+  function getReactionOffsets(t) {
+    if (!reaction) return { playerDx: 0, playerDy: 0, npcDx: 0, npcDy: 0 }
+    const elapsed = t - reaction.startTime
+    if (elapsed > reaction.duration) { reaction = null; return { playerDx: 0, playerDy: 0, npcDx: 0, npcDy: 0 } }
+    const progress = elapsed / reaction.duration
+
+    switch (reaction.type) {
+      case 'jump': {
+        // Player hops up then lands — parabolic arc
+        const arc = Math.sin(progress * Math.PI)
+        return { playerDx: 0, playerDy: -arc * 14, npcDx: 0, npcDy: 0 }
+      }
+      case 'shake': {
+        // Player shakes side-to-side, decaying
+        const decay = 1 - progress
+        const shake = Math.sin(elapsed * 30) * 3 * decay
+        return { playerDx: shake, playerDy: 0, npcDx: 0, npcDy: 0 }
+      }
+      case 'celebrate': {
+        // Both sprites bounce
+        const arc = Math.sin(progress * Math.PI * 2)
+        return { playerDx: 0, playerDy: -Math.abs(arc) * 10, npcDx: 0, npcDy: -Math.abs(arc) * 8 }
+      }
+      default:
+        return { playerDx: 0, playerDy: 0, npcDx: 0, npcDy: 0 }
+    }
+  }
 
   function resize() {
     const rect = canvas.parentElement.getBoundingClientRect()
@@ -60,17 +146,17 @@ export function createRenderer(canvas, quest = 'git') {
     zone.drawProps(ctx, w, h)
   }
 
-  function drawPlayer(w, h, t) {
+  function drawPlayer(w, h, t, dx = 0, dy = 0) {
     const bobY = Math.sin(t * 2) * 1.5
-    const playerX = w * 0.3 - 7 * SPRITE_SCALE
-    const playerY = h * 0.72 - 24 * SPRITE_SCALE + bobY
+    const playerX = w * 0.3 - 7 * SPRITE_SCALE + dx
+    const playerY = h * 0.72 - 24 * SPRITE_SCALE + bobY + dy
     drawSprite(ctx, PLAYER_SPRITE, playerX, playerY, SPRITE_SCALE)
   }
 
-  function drawNpc(w, h, t) {
+  function drawNpc(w, h, t, dx = 0, dy = 0) {
     const bobY = Math.sin(t * 1.5 + 1) * 2
-    const npcX = w * 0.65 - 7 * SPRITE_SCALE
-    const npcY = h * 0.72 - 24 * SPRITE_SCALE + bobY
+    const npcX = w * 0.65 - 7 * SPRITE_SCALE + dx
+    const npcY = h * 0.72 - 24 * SPRITE_SCALE + bobY + dy
     drawSprite(ctx, NPC_SPRITE, npcX, npcY, SPRITE_SCALE)
 
     // NPC name label
@@ -159,8 +245,21 @@ export function createRenderer(canvas, quest = 'git') {
 
     ctx.clearRect(0, 0, w, h)
     drawBackground(zone, w, h)
-    drawPlayer(w, h, t)
-    drawNpc(w, h, t)
+
+    // Ambient particles
+    const fx = zoneFx[currentLevel]
+    if (fx) {
+      if (fx.stars)     drawStars(ctx, fx.stars, w, h, t)
+      if (fx.rain)      drawRain(ctx, fx.rain, w, h, t)
+      if (fx.snow)      drawSnow(ctx, fx.snow, w, h, t)
+      if (fx.dust)      drawDust(ctx, fx.dust, w, h, t, fx.dustColor)
+      if (fx.fireflies) drawFireflies(ctx, fx.fireflies, w, h, t)
+      if (fx.torches)   drawTorches(ctx, fx.torches, w, h, t)
+    }
+
+    const offsets = getReactionOffsets(t)
+    drawPlayer(w, h, t, offsets.playerDx, offsets.playerDy)
+    drawNpc(w, h, t, offsets.npcDx, offsets.npcDy)
     drawSpeechBubble(w, h)
     drawLevelLabel(zone, w)
 
@@ -184,5 +283,11 @@ export function createRenderer(canvas, quest = 'git') {
     if (line !== undefined) npcLine = line
   }
 
-  return { start, stop, resize, update }
+  function triggerReaction(type) {
+    const t = (Date.now() - startTime) / 1000
+    const durations = { jump: 0.4, shake: 0.35, celebrate: 0.7 }
+    reaction = { type, startTime: t, duration: durations[type] ?? 0.4 }
+  }
+
+  return { start, stop, resize, update, react: triggerReaction }
 }

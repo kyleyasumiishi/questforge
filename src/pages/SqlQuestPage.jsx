@@ -94,6 +94,7 @@ export default function SqlQuestPage() {
         npcLine={currentMission?.npcLine ?? ''}
         quest="sql"
         unlockedKeys={sql.openCodexKeys}
+        reaction={sql.lastReaction}
       />
       <TerminalPanel
         history={sql.terminalHistory}

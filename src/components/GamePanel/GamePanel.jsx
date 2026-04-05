@@ -8,6 +8,7 @@ export default function GamePanel({
   npcLine = '',
   quest = 'git',
   unlockedKeys = [],
+  reaction = null, // { type: 'jump'|'shake'|'celebrate', key: unique }
 }) {
   const canvasRef = useRef(null)
   const rendererRef = useRef(null)
@@ -39,6 +40,11 @@ export default function GamePanel({
   useEffect(() => {
     rendererRef.current?.update({ level: levelNum, npc: npcName, line: npcLine })
   }, [levelNum, npcName, npcLine])
+
+  // Trigger reaction animation
+  useEffect(() => {
+    if (reaction?.type) rendererRef.current?.react(reaction.type)
+  }, [reaction?.key])
 
   return (
     <div className="flex flex-col w-full h-full bg-zinc-900 overflow-hidden">

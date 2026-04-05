@@ -96,6 +96,7 @@ export default function GitQuestPage() {
         npcLine={currentMission?.npcLine ?? ''}
         quest="git"
         unlockedKeys={git.openCodexKeys}
+        reaction={git.lastReaction}
       />
       <TerminalPanel
         history={git.terminalHistory}
